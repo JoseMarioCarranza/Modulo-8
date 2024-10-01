@@ -20,11 +20,35 @@ const setTareas = asyncHandler(async (req, res) => {
 })
 
 const updateTareas = asyncHandler(async (req, res) => {
-    res.status(200).json({ message: `Modificar la tarea número ${req.params.id}` })
+
+    const tarea = await Tarea.findById(req.params.id)
+
+    if (!tarea) {
+        res.status(404)
+        throw new Error("tarea no encontrada")
+    }
+
+    const tareaUpadated = await Tarea.findByIdAndUpdate(req.params.id, req.body, { new: true })
+
+    res.status(200).json(tareaUpadated)
 })
 
 const deleteTareas = asyncHandler(async (req, res) => {
-    res.status(200).json({ message: `Se elimino la tarea número ${req.params.id}` })
+
+    const tarea = await Tarea.findById(req.params.id)
+
+    if (!tarea) {
+        res.status(404)
+        throw new Error("tarea no encontrada")
+    }
+
+    await Tarea.deleteOne(tarea)
+
+    //Este es otro metodo que podríamos utilizar pero no esta eficiente dado que tendríamos que hacer
+    //una búsqueda en la base de datos para eliminarlo cosa que ya realizamos anterior mente
+    //await Tarea.findByIdAndDelete(req.params.id)
+
+    res.status(200).json({ id: tarea.id })
 })
 
 module.exports = {
