@@ -33,7 +33,7 @@ const registrarUser = asyncHandler(async (req, res) => {
 
     if (user) {
         res.status(201).json({
-            _id: user._id,
+            _id: user.id,
             name: user.name,
             email: user.email,
             admin: user.esAdmin
@@ -45,13 +45,47 @@ const registrarUser = asyncHandler(async (req, res) => {
 
 })
 
-const loginUser = asyncHandler((req, res) => {
-    res.status(200).json({ message: "Inicio de sesión realizado con exito" })
+const loginUser = asyncHandler(async (req, res) => {
+
+    //destructuramos el body
+    const { email, password } = req.body
+
+    //verificar si el usuario existe
+    const user = await User.findOne({ email })
+
+    //verificamos que el usuario exista
+
+    /*
+        Se usa user.id en vez de user._id porque
+        id regresa le id del usuario en formato string
+        _id regresa un object id
+        Si en algún momento queremos hacer alguna comparación el hecho de usar
+        _id nos dara error
+    */
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+        res.status(200).json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            token: generarToken(user.id)
+        })
+    } else {
+        res.status(400)
+        throw new Error("Credenciales incorrectas")
+    }
 })
 
 const misDatos = asyncHandler((req, res) => {
-    res.status(200).json({ message: "Datos del usuario obtenidos con exito" })
+    res.status(200).json(req.user)
 })
+
+// función para generer un JWT
+const generarToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: "30d"
+    })
+}
 
 
 
